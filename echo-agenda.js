@@ -91,6 +91,22 @@ function isApiKeyFormatValid(providerId, key) {
     return key.startsWith('sk-');
 }
 
+/** 首次进入且 localStorage 无密钥时，使用站点默认 OpenRouter Key（由 index.html 设置 window.__ECHO_AGENDA_DEFAULT_OPENROUTER_KEY__） */
+function getDefaultOpenRouterApiKey() {
+    if (typeof window === 'undefined') return '';
+    const k = window.__ECHO_AGENDA_DEFAULT_OPENROUTER_KEY__;
+    return typeof k === 'string' ? k.trim() : '';
+}
+
+function applyDefaultOpenRouterApiKeyIfNeeded() {
+    if (STATE.apiKey) return;
+    const key = getDefaultOpenRouterApiKey();
+    if (!key || !isApiKeyFormatValid('openrouter', key)) return;
+    STATE.apiKey = key;
+    STATE.aiProvider = 'openrouter';
+    saveToStorage();
+}
+
 // 插件定义
 const PLUGINS = {
     pyramid: {
@@ -142,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initializeApp() {
     console.log('=== Echo Agenda 初始化开始 ===');
     loadFromStorage();
+    applyDefaultOpenRouterApiKeyIfNeeded();
     
     // 加载主题
     loadTheme();
